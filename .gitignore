@@ -5,3 +5,8 @@ __pycache__/
 *.tar.gz
 *.pyc
 *.json
+.idea
+test-clean.tar.gz
+test-clean.tar.gz.1
+dev-clean.tar.gz
+dev-clean.tar.gz.1
