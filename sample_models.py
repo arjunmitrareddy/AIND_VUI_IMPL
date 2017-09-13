@@ -129,18 +129,33 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     print(model.summary())
     return model
 
-def final_model(input_dim):
+def final_model(input_dim, filters, kernel_size, conv_stride,
+    conv_border_mode, units, output_dim=29):
     """ Build a deep network for speech 
     """
     # Main acoustic input
     input_data = Input(name='the_input', shape=(None, input_dim))
     # TODO: Specify the layers in your network
-    ...
+    conv_1d = Conv1D(filters, kernel_size, strides=conv_stride, padding=conv_border_mode, activation='relu', name='conv1d')(input_data)
+    bn_conv1d = BatchNormalization(name='bn_conv1d')(conv_1d)
+    conv_1d_2 = Conv1D(filters*2, kernel_size, strides=conv_stride, padding=conv_border_mode, activation='relu', name='conv_1d_2')(bn_conv1d)
+    bn_conv1d_2 = BatchNormalization(name='bn_conv1d_2')(conv_1d_2)
+    conv_1d_3 = Conv1D(filters * 4, kernel_size, strides=conv_stride, padding=conv_border_mode, activation='relu',
+                       name='conv_1d_3')(bn_conv1d_2)
+    bn_conv1d_3 = BatchNormalization(name='bn_conv1d_3')(conv_1d_3)
+    simp_rnn = LSTM(units, activation='relu', return_sequences=True, implementation=2, name='rnn')(bn_conv1d_3)
+    bn_rnn = BatchNormalization(name='bn_rnn')(simp_rnn)
+    simp_rnn_2 = LSTM(units, activation='relu', return_sequences=True, implementation=2, name='rnn_2')(bn_rnn)
+    bn_rnn_2 = BatchNormalization(name='bn_rnn_2')(simp_rnn_2)
+    simp_rnn_3 = LSTM(units, activation='relu', return_sequences=True, implementation=2, name='rnn_3')(bn_rnn_2)
+    bn_rnn_3 = BatchNormalization(name='bn_rnn_3')(simp_rnn_3)
+    time_dense = TimeDistributed(Dense(output_dim))(bn_rnn)
     # TODO: Add softmax activation layer
-    y_pred = ...
+    y_pred = Activation('softmax', name='softmax')(time_dense)
     # Specify the model
     model = Model(inputs=input_data, outputs=y_pred)
     # TODO: Specify model.output_length
-    model.output_length = ...
+    model.output_length = lambda x: cnn_output_length(
+        x, kernel_size, conv_border_mode, conv_stride)
     print(model.summary())
     return model
