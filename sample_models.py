@@ -1,6 +1,6 @@
 from keras import backend as K
 from keras.models import Model
-from keras.layers import (BatchNormalization, Conv1D, Dense, Input, 
+from keras.layers import (BatchNormalization, Conv1D, Dense, Input, Dropout,
     TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM)
 
 def simple_rnn_model(input_dim, output_dim=29):
@@ -143,18 +143,17 @@ def final_model(input_dim, filters, kernel_size, conv_stride,
     # conv_1d_3 = Conv1D(filters * 4, kernel_size, strides=conv_stride, padding=conv_border_mode, activation='relu',
     #                    name='conv_1d_3')(bn_conv1d_2)
     # bn_conv1d_3 = BatchNormalization(name='bn_conv1d_3')(conv_1d_3)
-    simp_rnn = GRU(units, activation='relu', return_sequences=True, implementation=2, name='rnn')(bn_conv1d)
-    bn_rnn = BatchNormalization(name='bn_rnn')(simp_rnn)
-    bi_rnn = Bidirectional(GRU(units, activation='relu', return_sequences=True, implementation=2, name='bi_rnn'))(bn_rnn)
-    simp_rnn_2 = GRU(units, activation='relu', return_sequences=True, implementation=2, name='rnn_2')(bi_rnn)
-    bn_rnn_2 = BatchNormalization(name='bn_rnn_2')(simp_rnn_2)
+    bi_rnn = Bidirectional(GRU(units, activation='relu', return_sequences=True, implementation=2, name='bi_rnn'))(bn_conv1d)
+    bn_rnn = BatchNormalization(name='bn_rnn')(bi_rnn)
+    d1 = Dropout(rate=0.5)(bn_rnn)
     bi_rnn_2 = Bidirectional(GRU(units, activation='relu', return_sequences=True, implementation=2, name='bi_rnn_2'))(
-        bn_rnn_2)
-    simp_rnn_3 = GRU(units, activation='relu', return_sequences=True, implementation=2, name='rnn_3')(bi_rnn_2)
-    bn_rnn_3 = BatchNormalization(name='bn_rnn_3')(simp_rnn_3)
+        d1)
+    bn_rnn_2 = BatchNormalization(name='bn_rnn_2')(bi_rnn_2)
+    d2 = Dropout(rate=0.5)(bn_rnn_2)
     bi_rnn_3 = Bidirectional(GRU(units, activation='relu', return_sequences=True, implementation=2, name='bi_rnn_3'))(
-        bn_rnn_3)
-    time_dense = TimeDistributed(Dense(output_dim))(bi_rnn_3)
+        d2)
+    bn_rnn_3 = BatchNormalization(name='bn_rnn_3')(bi_rnn_3)
+    time_dense = TimeDistributed(Dense(output_dim))(bn_rnn_3)
     # TODO: Add softmax activation layer
     y_pred = Activation('softmax', name='softmax')(time_dense)
     # Specify the model

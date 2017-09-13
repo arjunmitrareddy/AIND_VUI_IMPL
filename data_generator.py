@@ -19,7 +19,7 @@ RNG_SEED = 123
 
 class AudioGenerator():
     def __init__(self, step=10, window=20, max_freq=8000, mfcc_dim=13,
-        minibatch_size=20, desc_file=None, spectrogram=True, max_duration=10.0, 
+        minibatch_size=20, desc_file=None, spectrogram=True, max_duration=10.0,
         sort_by_duration=False):
         """
         Params:
